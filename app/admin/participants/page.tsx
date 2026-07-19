@@ -30,17 +30,14 @@ export default function ParticipantsPage() {
           .map((participantDocument) => {
             const participantData = participantDocument.data();
 
-            return {
-              id: participantDocument.id,
-              name:
-                typeof participantData.name === "string"
-                  ? participantData.name
-                  : "Partecipante senza nome",
-              code:
-                typeof participantData.code === "string"
-                  ? participantData.code
-                  : "—",
-            };
+           return {
+  id: participantDocument.id,
+  name:
+    typeof participantData.name === "string"
+      ? participantData.name
+      : "Partecipante senza nome",
+  code: participantDocument.id,
+};
           })
           .sort((firstParticipant, secondParticipant) =>
             firstParticipant.name.localeCompare(
