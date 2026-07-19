@@ -288,6 +288,10 @@ export default function ChallengePage() {
 
       await Promise.all(
         selectedMedia.map(async (media) => {
+          if (!challenge) {
+  setUploadMessage("Prova non trovata.");
+  return;
+}
           const formData = new FormData();
           formData.append("file", media.file);
           formData.append("challengeId", challenge.id);
