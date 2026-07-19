@@ -210,11 +210,20 @@ export default function ChallengePage() {
   function addSelectedFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
 
-    const allowedFiles = files.filter((file) => {
-      if (challenge.media === "photo") return file.type.startsWith("image/");
-      if (challenge.media === "video") return file.type.startsWith("video/");
-      return file.type.startsWith("image/") || file.type.startsWith("video/");
-    });
+   const allowedFiles = files.filter((file) => {
+  if (challenge?.media === "photo") {
+    return file.type.startsWith("image/");
+  }
+
+  if (challenge?.media === "video") {
+    return file.type.startsWith("video/");
+  }
+
+  return (
+    file.type.startsWith("image/") ||
+    file.type.startsWith("video/")
+  );
+});
 
     if (allowedFiles.length !== files.length) {
       setUploadMessage("Alcuni file non sono compatibili con questa prova.");
