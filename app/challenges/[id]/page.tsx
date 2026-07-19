@@ -206,24 +206,15 @@ export default function ChallengePage() {
       </main>
     );
   }
-
+const challengeData = challenge;
   function addSelectedFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
 
-   const allowedFiles = files.filter((file) => {
-  if (challenge?.media === "photo") {
-    return file.type.startsWith("image/");
-  }
-
-  if (challenge?.media === "video") {
-    return file.type.startsWith("video/");
-  }
-
-  return (
-    file.type.startsWith("image/") ||
-    file.type.startsWith("video/")
-  );
-});
+    const allowedFiles = files.filter((file) => {
+      if (challengeData.media === "photo") return file.type.startsWith("image/");
+      if (challengeData.media === "video") return file.type.startsWith("video/");
+      return file.type.startsWith("image/") || file.type.startsWith("video/");
+    });
 
     if (allowedFiles.length !== files.length) {
       setUploadMessage("Alcuni file non sono compatibili con questa prova.");
@@ -249,13 +240,11 @@ export default function ChallengePage() {
     });
   }
 
- function galleryAcceptValue() {
-  if (challenge?.media === "photo") return "image/*";
-
-  if (challenge?.media === "video") return "video/*";
-
-  return "image/*,video/*";
-}
+  function galleryAcceptValue() {
+    if (challengeData.media === "photo") return "image/*";
+if (challengeData.media === "video") return "video/*";
+    return "image/*,video/*";
+  }
 
   async function handleSendProof() {
     if (submissionBlocked) {
@@ -288,13 +277,9 @@ export default function ChallengePage() {
 
       await Promise.all(
         selectedMedia.map(async (media) => {
-          if (!challenge) {
-  setUploadMessage("Prova non trovata.");
-  return;
-}
           const formData = new FormData();
           formData.append("file", media.file);
-          formData.append("challengeId", challenge.id);
+        formData.append("challengeId", challengeData.id);
           formData.append("participant", participantString);
           formData.append("team", teamString);
 
@@ -310,8 +295,8 @@ export default function ChallengePage() {
           }
 
           await addDoc(collection(db, "proofs"), {
-            challengeId: challenge.id,
-            challengeTitle: challenge.title,
+            challengeId: challengeData.id,
+challengeTitle: challengeData.title,
             participant,
             team,
             mediaUrl: result.url,
@@ -328,7 +313,7 @@ export default function ChallengePage() {
       setProofStatus("pending");
       setSubmissionBlocked(true);
       setBlockReason(
-        challenge.frequency === "once"
+        challengeData.frequency === "once"
           ? "Questa prova può essere inviata una sola volta."
           : "Hai già inviato questa prova oggi. Potrai riprovarla domani."
       );
