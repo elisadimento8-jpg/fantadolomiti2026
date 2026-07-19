@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  collection,
-  getDocs,
-} from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 import { db } from "../lib/firebase";
 
@@ -15,46 +12,66 @@ type Team = {
 };
 
 type SavedParticipant = {
-  code: string;
-  teamId: string;
+  code?: string;
+  teamId?: string;
 };
 
 export default function LeaderboardPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentTeamId, setCurrentTeamId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     async function loadLeaderboard() {
       try {
+        setLoading(true);
+        setErrorMessage("");
+
         const savedParticipant = localStorage.getItem(
           "fantadolomitiParticipant"
         );
 
-        if (!savedParticipant) {
-          window.location.href = "/";
-          return;
+        if (savedParticipant) {
+          try {
+            const participant = JSON.parse(
+              savedParticipant
+            ) as SavedParticipant;
+
+            if (participant.teamId) {
+              setCurrentTeamId(participant.teamId);
+            }
+          } catch (error) {
+            console.error(
+              "Dati partecipante non validi:",
+              error
+            );
+          }
         }
-
-        const participant = JSON.parse(
-          savedParticipant
-        ) as SavedParticipant;
-
-        setCurrentTeamId(participant.teamId);
 
         const teamsSnapshot = await getDocs(
           collection(db, "teams")
         );
 
-        const orderedTeams = teamsSnapshot.docs
-          .map((teamDocument) => ({
-            id: teamDocument.id,
-            ...(teamDocument.data() as Omit<Team, "id">),
-          }))
+        const orderedTeams: Team[] = teamsSnapshot.docs
+          .map((teamDocument) => {
+            const teamData = teamDocument.data();
+
+            return {
+              id: teamDocument.id,
+              teamName:
+                typeof teamData.teamName === "string"
+                  ? teamData.teamName
+                  : "Squadra senza nome",
+              points:
+                typeof teamData.points === "number"
+                  ? teamData.points
+                  : 0,
+            };
+          })
           .sort(
             (firstTeam, secondTeam) =>
-              (secondTeam.points ?? 0) -
-              (firstTeam.points ?? 0)
+              secondTeam.points - firstTeam.points
           );
 
         setTeams(orderedTeams);
@@ -62,6 +79,10 @@ export default function LeaderboardPage() {
         console.error(
           "Errore durante il caricamento della classifica:",
           error
+        );
+
+        setErrorMessage(
+          "Impossibile caricare la classifica. Riprova tra poco."
         );
       } finally {
         setLoading(false);
@@ -94,7 +115,7 @@ export default function LeaderboardPage() {
           </h1>
 
           <p className="mt-3 text-slate-300">
-            Posizione aggiornata delle squadre.
+            Punteggio totale aggiornato delle squadre.
           </p>
         </header>
 
@@ -104,42 +125,68 @@ export default function LeaderboardPage() {
           </p>
         )}
 
-        {!loading && (
-          <div className="space-y-4">
-            {teams.map((team, index) => {
-              const position = index + 1;
-              const isCurrentTeam =
-                team.id === currentTeamId;
-
-              return (
-                <article
-                  key={team.id}
-                  className={`flex items-center gap-4 rounded-2xl border p-5 ${
-                    isCurrentTeam
-                      ? "border-emerald-300 bg-emerald-500/20"
-                      : "border-white/20 bg-white/10"
-                  }`}
-                >
-                  <div className="w-14 shrink-0 text-center text-3xl font-bold">
-                    {positionIcon(position)}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl font-bold">
-                      {team.teamName}
-                    </p>
-
-                    {isCurrentTeam && (
-                      <p className="mt-1 text-sm font-semibold text-emerald-300">
-                        La tua squadra
-                      </p>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+        {!loading && errorMessage && (
+          <p className="rounded-2xl border border-red-400/30 bg-red-500/10 p-5 text-center text-red-200">
+            ❌ {errorMessage}
+          </p>
         )}
+
+        {!loading &&
+          !errorMessage &&
+          teams.length === 0 && (
+            <p className="rounded-2xl bg-white/10 p-5 text-center text-slate-300">
+              Non sono ancora presenti squadre in classifica.
+            </p>
+          )}
+
+        {!loading &&
+          !errorMessage &&
+          teams.length > 0 && (
+            <div className="space-y-4">
+              {teams.map((team, index) => {
+                const position = index + 1;
+                const isCurrentTeam =
+                  team.id === currentTeamId;
+
+                return (
+                  <article
+                    key={team.id}
+                    className={`flex items-center gap-4 rounded-2xl border p-5 ${
+                      isCurrentTeam
+                        ? "border-emerald-300 bg-emerald-500/20"
+                        : "border-white/20 bg-white/10"
+                    }`}
+                  >
+                    <div className="w-14 shrink-0 text-center text-3xl font-bold">
+                      {positionIcon(position)}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xl font-bold">
+                        {team.teamName}
+                      </p>
+
+                      {isCurrentTeam && (
+                        <p className="mt-1 text-sm font-semibold text-emerald-300">
+                          La tua squadra
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="shrink-0 rounded-xl bg-black/20 px-4 py-3 text-right">
+                      <p className="text-2xl font-bold text-emerald-300">
+                        {team.points}
+                      </p>
+
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+                        punti
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
 
         <button
           type="button"
