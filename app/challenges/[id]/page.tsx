@@ -249,11 +249,13 @@ export default function ChallengePage() {
     });
   }
 
-  function galleryAcceptValue() {
-    if (challenge.media === "photo") return "image/*";
-    if (challenge.media === "video") return "video/*";
-    return "image/*,video/*";
-  }
+ function galleryAcceptValue() {
+  if (challenge?.media === "photo") return "image/*";
+
+  if (challenge?.media === "video") return "video/*";
+
+  return "image/*,video/*";
+}
 
   async function handleSendProof() {
     if (submissionBlocked) {
