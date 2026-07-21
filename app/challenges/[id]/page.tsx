@@ -277,30 +277,64 @@ if (challengeData.media === "video") return "video/*";
 
       await Promise.all(
         selectedMedia.map(async (media) => {
-          const formData = new FormData();
-          formData.append("file", media.file);
-        formData.append("challengeId", challengeData.id);
-          formData.append("participant", participantString);
-          formData.append("team", teamString);
-
-          const response = await fetch("/api/upload", {
+          const signatureResponse = await fetch("/api/upload-signature", {
             method: "POST",
-            body: formData,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              challengeId: challengeData.id,
+            }),
           });
 
-          const result = await response.json();
+          const signatureResult = await signatureResponse.json();
 
-          if (!response.ok) {
-            throw new Error(result.error ?? "Caricamento non riuscito.");
+          if (!signatureResponse.ok) {
+            throw new Error(
+              signatureResult.error ??
+                "Impossibile preparare il caricamento."
+            );
+          }
+
+          const cloudinaryFormData = new FormData();
+
+          cloudinaryFormData.append("file", media.file);
+          cloudinaryFormData.append("api_key", signatureResult.apiKey);
+          cloudinaryFormData.append(
+            "timestamp",
+            String(signatureResult.timestamp)
+          );
+          cloudinaryFormData.append(
+            "signature",
+            signatureResult.signature
+          );
+          cloudinaryFormData.append("folder", signatureResult.folder);
+
+          const cloudinaryResponse = await fetch(
+            `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/auto/upload`,
+            {
+              method: "POST",
+              body: cloudinaryFormData,
+            }
+          );
+
+          const cloudinaryResult = await cloudinaryResponse.json();
+
+          if (!cloudinaryResponse.ok) {
+            throw new Error(
+              cloudinaryResult.error?.message ??
+                "Caricamento su Cloudinary non riuscito."
+            );
           }
 
           await addDoc(collection(db, "proofs"), {
             challengeId: challengeData.id,
-challengeTitle: challengeData.title,
+            challengeTitle: challengeData.title,
             participant,
             team,
-            mediaUrl: result.url,
-            mediaType: result.resourceType,
+            mediaUrl: cloudinaryResult.secure_url,
+            mediaType: cloudinaryResult.resource_type,
+            publicId: cloudinaryResult.public_id,
             status: "pending",
             createdAt: serverTimestamp(),
           });

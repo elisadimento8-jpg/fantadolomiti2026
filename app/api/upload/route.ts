@@ -67,6 +67,15 @@ console.log("SECRET PRESENT:", !!process.env.CLOUDINARY_API_SECRET);
     const formData = await request.formData();
 
     const file = formData.get("file");
+    console.log("FILE:", file);
+
+if (file instanceof File) {
+  console.log({
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  });
+}
     const challengeIdValue = formData.get("challengeId");
 
     if (!(file instanceof File)) {
@@ -108,7 +117,7 @@ console.log("SECRET PRESENT:", !!process.env.CLOUDINARY_API_SECRET);
 
     const arrayBuffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(arrayBuffer);
-
+console.log("Invio a Cloudinary...");
     const result = await uploadToCloudinary(
       fileBuffer,
       `fantadolomiti/prove/${challengeId}`
