@@ -173,15 +173,7 @@ export default function LeaderboardPage() {
                       )}
                     </div>
 
-                    <div className="shrink-0 rounded-xl bg-black/20 px-4 py-3 text-right">
-                      <p className="text-2xl font-bold text-emerald-300">
-                        {team.points}
-                      </p>
-
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-                        punti
-                      </p>
-                    </div>
+                 
                   </article>
                 );
               })}
