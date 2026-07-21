@@ -535,28 +535,7 @@ if (challengeData.media === "video") return "video/*";
             />
 
             <div className="mt-5 space-y-3">
-              {challenge.media !== "video" && (
-                <button
-                  type="button"
-                  disabled={checkingProofs || submissionBlocked}
-                  onClick={() => photoInputRef.current?.click()}
-                  className="w-full rounded-xl bg-sky-500 px-5 py-3 font-bold transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  📷 Scatta foto
-                </button>
-              )}
-
-              {challenge.media !== "photo" && (
-                <button
-                  type="button"
-                  disabled={checkingProofs || submissionBlocked}
-                  onClick={() => videoInputRef.current?.click()}
-                  className="w-full rounded-xl bg-violet-500 px-5 py-3 font-bold transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  🎥 Registra video
-                </button>
-              )}
-
+  
               <button
                 type="button"
                 disabled={checkingProofs || submissionBlocked}
