@@ -287,13 +287,40 @@ if (challengeData.media === "video") return "video/*";
             }),
           });
 
-          const signatureResult = await signatureResponse.json();
+          const signatureText = await signatureResponse.text();
+
+          let signatureResult: {
+            error?: string;
+            apiKey?: string;
+            timestamp?: number;
+            signature?: string;
+            folder?: string;
+            cloudName?: string;
+          };
+
+          try {
+            signatureResult = JSON.parse(signatureText);
+          } catch {
+            throw new Error(
+              `Risposta non valida dalla firma Cloudinary (${signatureResponse.status}).`
+            );
+          }
 
           if (!signatureResponse.ok) {
             throw new Error(
               signatureResult.error ??
                 "Impossibile preparare il caricamento."
             );
+          }
+
+          if (
+            !signatureResult.apiKey ||
+            !signatureResult.timestamp ||
+            !signatureResult.signature ||
+            !signatureResult.folder ||
+            !signatureResult.cloudName
+          ) {
+            throw new Error("La firma Cloudinary ricevuta è incompleta.");
           }
 
           const cloudinaryFormData = new FormData();
@@ -318,12 +345,39 @@ if (challengeData.media === "video") return "video/*";
             }
           );
 
-          const cloudinaryResult = await cloudinaryResponse.json();
+          const cloudinaryText = await cloudinaryResponse.text();
+
+          let cloudinaryResult: {
+            secure_url?: string;
+            resource_type?: string;
+            public_id?: string;
+            error?: {
+              message?: string;
+            };
+          };
+
+          try {
+            cloudinaryResult = JSON.parse(cloudinaryText);
+          } catch {
+            throw new Error(
+              `Risposta non valida da Cloudinary (${cloudinaryResponse.status}).`
+            );
+          }
 
           if (!cloudinaryResponse.ok) {
             throw new Error(
               cloudinaryResult.error?.message ??
                 "Caricamento su Cloudinary non riuscito."
+            );
+          }
+
+          if (
+            !cloudinaryResult.secure_url ||
+            !cloudinaryResult.resource_type ||
+            !cloudinaryResult.public_id
+          ) {
+            throw new Error(
+              "Cloudinary non ha restituito tutti i dati del file."
             );
           }
 
